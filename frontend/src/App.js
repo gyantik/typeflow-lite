@@ -4,8 +4,6 @@ function App() {
   const [originalText, setOriginalText] = useState("hello world");
   const [typedText, setTypedText] = useState("");
   const [result, setResult] = useState(null);
-
-  // ⭐ NEW — AI summary state
   const [summary, setSummary] = useState("");
 
   // Upload PDF
@@ -15,7 +13,7 @@ function App() {
     const formData = new FormData();
     formData.append("file", file);
 
-    const res = await fetch("http://127.0.0.1:5000/api/upload", {
+    const res = await fetch("https://typeflow-lite.onrender.com/api/upload", {
       method: "POST",
       body: formData,
     });
@@ -27,24 +25,26 @@ function App() {
       setTypedText("");
     }
 
-    // ⭐ SET AI SUMMARY
     if (data.summary) {
       setSummary(data.summary);
     }
   };
 
   const calculateMetrics = async () => {
-    const response = await fetch("http://127.0.0.1:5000/api/metrics", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        original_text: originalText,
-        typed_text: typedText,
-        time_seconds: 30,
-      }),
-    });
+    const response = await fetch(
+      "https://typeflow-lite.onrender.com/api/metrics",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          original_text: originalText,
+          typed_text: typedText,
+          time_seconds: 30,
+        }),
+      }
+    );
 
     const data = await response.json();
     setResult(data);
@@ -54,14 +54,8 @@ function App() {
     <div style={{ padding: 40, fontFamily: "Arial" }}>
       <h2>TypeFlow Lite</h2>
 
-      {/* Upload */}
-      <input
-        type="file"
-        accept="application/pdf"
-        onChange={handleUpload}
-      />
+      <input type="file" accept="application/pdf" onChange={handleUpload} />
 
-      {/* ⭐ AI SUMMARY PANEL */}
       {summary && (
         <div style={{ border: "1px solid #ccc", padding: 10, marginTop: 15 }}>
           <h4>AI Summary</h4>
@@ -69,7 +63,6 @@ function App() {
         </div>
       )}
 
-      {/* Main Layout */}
       <div
         style={{
           display: "grid",
@@ -78,7 +71,6 @@ function App() {
           marginTop: 20,
         }}
       >
-        {/* Original Text Panel */}
         <div style={{ border: "1px solid #ccc", padding: 10 }}>
           <h4>Original Text</h4>
           <textarea
@@ -88,7 +80,6 @@ function App() {
           />
         </div>
 
-        {/* Typing Panel */}
         <div style={{ border: "1px solid #ccc", padding: 10 }}>
           <h4>Type Here</h4>
           <textarea
@@ -96,17 +87,21 @@ function App() {
             onChange={(e) => setTypedText(e.target.value)}
             style={{ width: "100%", height: 200 }}
           />
-          <br /><br />
+          <br />
+          <br />
           <button onClick={calculateMetrics}>Calculate</button>
         </div>
 
-        {/* Metrics Panel */}
         <div style={{ border: "1px solid #ccc", padding: 10 }}>
           <h4>Metrics</h4>
           {result ? (
             <>
-              <p><b>Accuracy:</b> {result.accuracy}</p>
-              <p><b>WPM:</b> {result.wpm}</p>
+              <p>
+                <b>Accuracy:</b> {result.accuracy}
+              </p>
+              <p>
+                <b>WPM:</b> {result.wpm}
+              </p>
             </>
           ) : (
             <p>No results yet</p>
