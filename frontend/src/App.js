@@ -5,8 +5,6 @@ function App() {
   const [typedText, setTypedText] = useState("");
   const [result, setResult] = useState(null);
   const [summary, setSummary] = useState("");
-
-  // ⭐ NEW — loading + error states
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -41,8 +39,7 @@ function App() {
         setSummary(data.summary);
       }
     } catch (err) {
-      console.error(err);
-      setError("Upload failed. Backend may be waking up.");
+      setError("Upload failed. Try again.");
     }
 
     setLoading(false);
@@ -57,9 +54,7 @@ function App() {
         "https://typeflow-lite.onrender.com/api/metrics",
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             original_text: originalText,
             typed_text: typedText,
@@ -71,33 +66,40 @@ function App() {
       const data = await response.json();
       setResult(data);
     } catch (err) {
-      console.error(err);
       setError("Metrics calculation failed.");
     }
 
     setLoading(false);
   };
 
+  // ⭐ CARD STYLE (NEW UI LOOK)
+  const cardStyle = {
+    background: "white",
+    padding: 16,
+    borderRadius: 12,
+    boxShadow: "0 2px 10px rgba(0,0,0,0.08)",
+  };
+
   return (
-    <div style={{ padding: 40, fontFamily: "Arial" }}>
-      <h2>TypeFlow Lite</h2>
+    <div
+      style={{
+        padding: 40,
+        fontFamily: "Arial",
+        backgroundColor: "#f4f6f8",
+        minHeight: "100vh",
+      }}
+    >
+      <h2 style={{ marginBottom: 20 }}>TypeFlow Lite</h2>
 
       {/* Upload */}
       <input type="file" accept="application/pdf" onChange={handleUpload} />
 
-      {/* ⭐ Loading indicator */}
-      {loading && (
-        <p style={{ marginTop: 10 }}>Processing... please wait</p>
-      )}
-
-      {/* ⭐ Error message */}
-      {error && (
-        <p style={{ color: "red", marginTop: 10 }}>{error}</p>
-      )}
+      {loading && <p style={{ marginTop: 10 }}>Processing...</p>}
+      {error && <p style={{ color: "red" }}>{error}</p>}
 
       {/* AI Summary */}
       {summary && (
-        <div style={{ border: "1px solid #ccc", padding: 10, marginTop: 15 }}>
+        <div style={{ ...cardStyle, marginTop: 15 }}>
           <h4>AI Summary</h4>
           <p>{summary}</p>
         </div>
@@ -106,38 +108,51 @@ function App() {
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "1fr 1fr 250px",
+          gridTemplateColumns: "1fr 1fr 260px",
           gap: 20,
           marginTop: 20,
         }}
       >
         {/* Original Text */}
-        <div style={{ border: "1px solid #ccc", padding: 10 }}>
+        <div style={cardStyle}>
           <h4>Original Text</h4>
           <textarea
             value={originalText}
             readOnly
-            style={{ width: "100%", height: 200 }}
+            style={{ width: "100%", height: 220 }}
           />
         </div>
 
-        {/* Typing Panel */}
-        <div style={{ border: "1px solid #ccc", padding: 10 }}>
+        {/* Typing */}
+        <div style={cardStyle}>
           <h4>Type Here</h4>
           <textarea
             value={typedText}
             onChange={(e) => setTypedText(e.target.value)}
-            style={{ width: "100%", height: 200 }}
+            style={{ width: "100%", height: 220 }}
           />
+
           <br />
           <br />
-          <button onClick={calculateMetrics} disabled={loading}>
+
+          <button
+            onClick={calculateMetrics}
+            disabled={loading}
+            style={{
+              background: "#4f46e5",
+              color: "white",
+              border: "none",
+              padding: "10px 16px",
+              borderRadius: 6,
+              cursor: "pointer",
+            }}
+          >
             {loading ? "Processing..." : "Calculate"}
           </button>
         </div>
 
-        {/* Metrics Panel */}
-        <div style={{ border: "1px solid #ccc", padding: 10 }}>
+        {/* Metrics */}
+        <div style={cardStyle}>
           <h4>Metrics</h4>
           {result ? (
             <>
