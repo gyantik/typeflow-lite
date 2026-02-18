@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./App.css";
 
 function App() {
@@ -6,13 +6,10 @@ function App() {
   const [typedText, setTypedText] = useState("");
   const [result, setResult] = useState(null);
   const [summary, setSummary] = useState("");
-  const [loading, setLoading] = useState(false);
 
-  // Upload PDF
+  // ⭐ Upload PDF
   const handleUpload = async (e) => {
     const file = e.target.files[0];
-    if (!file) return;
-
     const formData = new FormData();
     formData.append("file", file);
 
@@ -36,112 +33,120 @@ function App() {
     }
   };
 
-  const calculateMetrics = async () => {
-    setLoading(true);
+  // ⭐ AUTO CALCULATE METRICS WHILE TYPING
+  useEffect(() => {
+    if (!typedText) return;
 
-    const response = await fetch(
-      "https://typeflow-lite.onrender.com/api/metrics",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          original_text: originalText,
-          typed_text: typedText,
-          time_seconds: 30,
-        }),
+    const calculate = async () => {
+      const response = await fetch(
+        "https://typeflow-lite.onrender.com/api/metrics",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            original_text: originalText,
+            typed_text: typedText,
+            time_seconds: 30,
+          }),
+        }
+      );
+
+      const data = await response.json();
+      setResult(data);
+    };
+
+    calculate();
+  }, [typedText]);
+
+  // ⭐ IMMERSIVE TEXT DIFF RENDER
+  const renderText = () => {
+    return originalText.split("").map((char, index) => {
+      let className = "char";
+
+      if (typedText[index] == null) {
+        className += " pending";
+      } else if (typedText[index] === char) {
+        className += " correct";
+      } else {
+        className += " incorrect";
       }
-    );
 
-    const data = await response.json();
-    setResult(data);
-    setLoading(false);
+      return (
+        <span key={index} className={className}>
+          {char}
+        </span>
+      );
+    });
   };
 
   return (
-    <div className="app-bg">
-      {/* NAVBAR */}
-      <div className="navbar">
+    <div className="app">
+      {/* HEADER */}
+      <header className="header">
         <h1>
-          <span className="logo-main">TypeFlow</span>{" "}
-          <span className="logo-lite">Lite</span>
+          <span className="brand">TypeFlow</span> Lite
         </h1>
-        <div className="nav-links">⚙ Settings</div>
-      </div>
+      </header>
 
-      <div className="container">
-        {/* Upload Zone */}
-        <label className="upload-zone">
-          📄 Drag & Drop or Click to Upload PDF
-          <input type="file" accept="application/pdf" onChange={handleUpload} />
-        </label>
+      {/* FILE UPLOAD */}
+      <input type="file" accept="application/pdf" onChange={handleUpload} />
 
-        {/* AI Summary */}
-        {summary && (
-          <div className="card">
-            <h3>✨ AI Summary</h3>
-            <p>{summary}</p>
-          </div>
-        )}
+      {/* AI SUMMARY */}
+      {summary && (
+        <div className="summaryCard">
+          <h3>AI Summary</h3>
+          <p>{summary}</p>
+        </div>
+      )}
 
-        {/* MAIN GRID */}
-        <div className="grid">
-          {/* Original */}
-          <div className="card">
-            <h3>Original Text</h3>
+      {/* MAIN GRID */}
+      <div className="grid">
+        {/* IMMERSIVE TYPING CARD */}
+        <div className="card typingCard">
+          <h3>Typing Editor</h3>
+
+          <div className="typingArea">
+            <div className="overlayText">{renderText()}</div>
+
             <textarea
-              className="mono"
-              value={originalText}
-              readOnly
-            />
-          </div>
-
-          {/* Typing */}
-          <div className="card">
-            <h3>Type Here</h3>
-            <textarea
-              className="mono"
+              spellCheck="false"
+              autoComplete="off"
               value={typedText}
               onChange={(e) => setTypedText(e.target.value)}
+              className="hiddenInput"
             />
-
-            <button
-              className={`primary-btn ${loading ? "loading" : ""}`}
-              onClick={calculateMetrics}
-            >
-              {loading ? "Calculating..." : "Calculate"}
-            </button>
           </div>
+        </div>
 
-          {/* Metrics */}
-          <div className="card">
-            <h3>Metrics</h3>
+        {/* METRICS PANEL */}
+        <div className="card metricsCard">
+          <h3>Metrics</h3>
 
-            <div className="metrics-grid">
-              <div className="metric">
-                ⚡
-                <span>WPM</span>
-                <b>{result ? result.wpm : "--"}</b>
+          <div className="metricsGrid">
+            <div className="statTile">
+              <div className="value">
+                {result ? result.wpm : "--"}
               </div>
+              <div className="label">WPM</div>
+            </div>
 
-              <div className="metric">
-                🎯
-                <span>Accuracy</span>
-                <b>{result ? result.accuracy : "--"}</b>
+            <div className="statTile">
+              <div className="value">
+                {result ? result.accuracy : "--"}
               </div>
+              <div className="label">Accuracy</div>
+            </div>
 
-              <div className="metric">
-                ⏱
-                <span>Time</span>
-                <b>30s</b>
-              </div>
+            <div className="statTile">
+              <div className="value">{typedText.length}</div>
+              <div className="label">Chars</div>
+            </div>
 
-              <div className="metric">
-                ❌
-                <span>Errors</span>
-                <b>{result ? 100 - result.accuracy : "--"}</b>
+            <div className="statTile">
+              <div className="value">
+                {typedText.length - originalText.length}
               </div>
+              <div className="label">Diff</div>
             </div>
           </div>
         </div>
