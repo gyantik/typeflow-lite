@@ -1,0 +1,12 @@
+# Python
+venv/
+__pycache__/
+*.pyc
+typing.db
+
+# React
+node_modules/
+build/
+
+# uploads
+uploads/
