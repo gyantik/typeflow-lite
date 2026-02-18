@@ -1,45 +1,52 @@
 # TypeFlow Lite
 
 ## Overview
-A minimal typing metrics web app built with Flask and React.
-Users submit typed text and receive WPM and accuracy results.
+TypeFlow Lite is a minimal full-stack typing metrics application built with Flask (backend) and React (frontend).  
+Users type a given text and receive calculated typing speed (WPM) and accuracy in real time.
+
+The project focuses on clean architecture, safety, and maintainability rather than feature complexity.
+
+---
 
 ## Architecture
-Backend:
-- Flask API
-- Routes layer
-- Services layer
-- Validation schemas
 
-Frontend:
-- React single page interface
+### Backend (Flask API)
+Structure follows clear separation of concerns:
+
+- routes → API endpoints only (thin controllers)
+- services → business logic (WPM + accuracy calculations)
+- schemas → input validation rules
+- tests → automated verification
+
+Key design idea:
+Routes do not contain logic. All computation lives in services.
+
+### Frontend (React)
+Single-page interface that:
+- sends typing data to backend
+- displays WPM and accuracy
+- keeps UI simple and predictable
+
+---
 
 ## Key Technical Decisions
-- Thin routes for maintainability
-- Service layer for logic separation
-- Input validation to prevent invalid states
+
+- Thin routes to prevent logic duplication.
+- Service layer to isolate core calculations.
+- Validation layer to prevent invalid states.
+- Global error handler to keep failures observable.
+- Minimal UI to prioritise system clarity over visuals.
+
+---
 
 ## AI Usage
+
 AI tools were used for:
-- Architecture planning
-- Boilerplate generation
-- Debugging assistance
+- initial project structure planning
+- boilerplate code generation
+- debugging and refactoring assistance
+- test case suggestions
 
-All generated code was reviewed and adjusted manually.
+AI outputs were manually reviewed and adjusted to maintain system integrity.
 
-## Risks
-- Large text inputs may impact performance.
-- No authentication implemented.
-
-## Future Extensions
-- Add database storage for sessions.
-- Add AI-generated summaries.
-- Add typing analytics dashboard.
-
-## Running the Project
-
-Backend:
-python run.py
-
-Frontend:
-npm start
+AI behavior is constrained using rules defined in:
