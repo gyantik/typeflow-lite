@@ -6,56 +6,96 @@ function App() {
   const [result, setResult] = useState(null);
   const [summary, setSummary] = useState("");
 
+  // ⭐ NEW — loading + error states
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
   // Upload PDF
   const handleUpload = async (e) => {
     const file = e.target.files[0];
+    if (!file) return;
 
-    const formData = new FormData();
-    formData.append("file", file);
+    setLoading(true);
+    setError("");
 
-    const res = await fetch("https://typeflow-lite.onrender.com/api/upload", {
-      method: "POST",
-      body: formData,
-    });
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
 
-    const data = await res.json();
+      const res = await fetch(
+        "https://typeflow-lite.onrender.com/api/upload",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
 
-    if (data.text) {
-      setOriginalText(data.text);
-      setTypedText("");
+      const data = await res.json();
+
+      if (data.text) {
+        setOriginalText(data.text);
+        setTypedText("");
+      }
+
+      if (data.summary) {
+        setSummary(data.summary);
+      }
+    } catch (err) {
+      console.error(err);
+      setError("Upload failed. Backend may be waking up.");
     }
 
-    if (data.summary) {
-      setSummary(data.summary);
-    }
+    setLoading(false);
   };
 
   const calculateMetrics = async () => {
-    const response = await fetch(
-      "https://typeflow-lite.onrender.com/api/metrics",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          original_text: originalText,
-          typed_text: typedText,
-          time_seconds: 30,
-        }),
-      }
-    );
+    setLoading(true);
+    setError("");
 
-    const data = await response.json();
-    setResult(data);
+    try {
+      const response = await fetch(
+        "https://typeflow-lite.onrender.com/api/metrics",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            original_text: originalText,
+            typed_text: typedText,
+            time_seconds: 30,
+          }),
+        }
+      );
+
+      const data = await response.json();
+      setResult(data);
+    } catch (err) {
+      console.error(err);
+      setError("Metrics calculation failed.");
+    }
+
+    setLoading(false);
   };
 
   return (
     <div style={{ padding: 40, fontFamily: "Arial" }}>
       <h2>TypeFlow Lite</h2>
 
+      {/* Upload */}
       <input type="file" accept="application/pdf" onChange={handleUpload} />
 
+      {/* ⭐ Loading indicator */}
+      {loading && (
+        <p style={{ marginTop: 10 }}>Processing... please wait</p>
+      )}
+
+      {/* ⭐ Error message */}
+      {error && (
+        <p style={{ color: "red", marginTop: 10 }}>{error}</p>
+      )}
+
+      {/* AI Summary */}
       {summary && (
         <div style={{ border: "1px solid #ccc", padding: 10, marginTop: 15 }}>
           <h4>AI Summary</h4>
@@ -71,6 +111,7 @@ function App() {
           marginTop: 20,
         }}
       >
+        {/* Original Text */}
         <div style={{ border: "1px solid #ccc", padding: 10 }}>
           <h4>Original Text</h4>
           <textarea
@@ -80,6 +121,7 @@ function App() {
           />
         </div>
 
+        {/* Typing Panel */}
         <div style={{ border: "1px solid #ccc", padding: 10 }}>
           <h4>Type Here</h4>
           <textarea
@@ -89,9 +131,12 @@ function App() {
           />
           <br />
           <br />
-          <button onClick={calculateMetrics}>Calculate</button>
+          <button onClick={calculateMetrics} disabled={loading}>
+            {loading ? "Processing..." : "Calculate"}
+          </button>
         </div>
 
+        {/* Metrics Panel */}
         <div style={{ border: "1px solid #ccc", padding: 10 }}>
           <h4>Metrics</h4>
           {result ? (
