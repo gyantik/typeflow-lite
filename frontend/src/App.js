@@ -1,11 +1,14 @@
 import React, { useState } from "react";
+import "./App.css";
 
 function App() {
   const [originalText, setOriginalText] = useState("hello world");
   const [typedText, setTypedText] = useState("");
   const [result, setResult] = useState(null);
   const [summary, setSummary] = useState("");
+  const [loading, setLoading] = useState(false);
 
+  // Upload PDF
   const handleUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -34,11 +37,15 @@ function App() {
   };
 
   const calculateMetrics = async () => {
+    setLoading(true);
+
     const response = await fetch(
       "https://typeflow-lite.onrender.com/api/metrics",
       {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({
           original_text: originalText,
           typed_text: typedText,
@@ -49,132 +56,94 @@ function App() {
 
     const data = await response.json();
     setResult(data);
-  };
-
-  // ⭐ Animated Card Style
-  const cardStyle = {
-    background: "rgba(255,255,255,0.7)",
-    backdropFilter: "blur(12px)",
-    borderRadius: 16,
-    padding: 20,
-    border: "1px solid rgba(255,255,255,0.4)",
-    boxShadow: "0 8px 25px rgba(0,0,0,0.08)",
-    transition: "0.25s",
+    setLoading(false);
   };
 
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        padding: 40,
-        fontFamily: "Segoe UI",
-        background:
-          "linear-gradient(135deg, #eef2ff, #fdf2f8, #ecfeff)",
-      }}
-    >
-      <h1
-        style={{
-          marginBottom: 20,
-          color: "#312e81",
-        }}
-      >
-        ✨ TypeFlow Lite
-      </h1>
+    <div className="app-bg">
+      {/* NAVBAR */}
+      <div className="navbar">
+        <h1>
+          <span className="logo-main">TypeFlow</span>{" "}
+          <span className="logo-lite">Lite</span>
+        </h1>
+        <div className="nav-links">⚙ Settings</div>
+      </div>
 
-      <input type="file" accept="application/pdf" onChange={handleUpload} />
+      <div className="container">
+        {/* Upload Zone */}
+        <label className="upload-zone">
+          📄 Drag & Drop or Click to Upload PDF
+          <input type="file" accept="application/pdf" onChange={handleUpload} />
+        </label>
 
-      {/* AI Summary */}
-      {summary && (
-        <div style={{ ...cardStyle, marginTop: 20 }}>
-          <h3 style={{ color: "#4f46e5" }}>AI Summary</h3>
-          <p>{summary}</p>
-        </div>
-      )}
+        {/* AI Summary */}
+        {summary && (
+          <div className="card">
+            <h3>✨ AI Summary</h3>
+            <p>{summary}</p>
+          </div>
+        )}
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "1fr 1fr 260px",
-          gap: 25,
-          marginTop: 25,
-        }}
-      >
-        {/* Original */}
-        <div style={cardStyle}>
-          <h3 style={{ color: "#4338ca" }}>Original Text</h3>
-          <textarea
-            value={originalText}
-            readOnly
-            style={{
-              width: "100%",
-              height: 230,
-              borderRadius: 10,
-              border: "1px solid #ddd",
-              padding: 10,
-            }}
-          />
-        </div>
+        {/* MAIN GRID */}
+        <div className="grid">
+          {/* Original */}
+          <div className="card">
+            <h3>Original Text</h3>
+            <textarea
+              className="mono"
+              value={originalText}
+              readOnly
+            />
+          </div>
 
-        {/* Typing */}
-        <div style={cardStyle}>
-          <h3 style={{ color: "#4338ca" }}>Type Here</h3>
+          {/* Typing */}
+          <div className="card">
+            <h3>Type Here</h3>
+            <textarea
+              className="mono"
+              value={typedText}
+              onChange={(e) => setTypedText(e.target.value)}
+            />
 
-          <textarea
-            value={typedText}
-            onChange={(e) => setTypedText(e.target.value)}
-            style={{
-              width: "100%",
-              height: 230,
-              borderRadius: 10,
-              border: "1px solid #ddd",
-              padding: 10,
-            }}
-          />
+            <button
+              className={`primary-btn ${loading ? "loading" : ""}`}
+              onClick={calculateMetrics}
+            >
+              {loading ? "Calculating..." : "Calculate"}
+            </button>
+          </div>
 
-          <br />
-          <br />
+          {/* Metrics */}
+          <div className="card">
+            <h3>Metrics</h3>
 
-          <button
-            onClick={calculateMetrics}
-            style={{
-              background:
-                "linear-gradient(135deg,#6366f1,#a855f7)",
-              color: "white",
-              border: "none",
-              padding: "12px 18px",
-              borderRadius: 10,
-              cursor: "pointer",
-              fontWeight: "bold",
-              boxShadow: "0 4px 12px rgba(99,102,241,0.4)",
-              transition: "0.2s",
-            }}
-            onMouseEnter={(e) =>
-              (e.target.style.transform = "scale(1.05)")
-            }
-            onMouseLeave={(e) =>
-              (e.target.style.transform = "scale(1)")
-            }
-          >
-            Calculate
-          </button>
-        </div>
+            <div className="metrics-grid">
+              <div className="metric">
+                ⚡
+                <span>WPM</span>
+                <b>{result ? result.wpm : "--"}</b>
+              </div>
 
-        {/* Metrics */}
-        <div style={cardStyle}>
-          <h3 style={{ color: "#4338ca" }}>Metrics</h3>
+              <div className="metric">
+                🎯
+                <span>Accuracy</span>
+                <b>{result ? result.accuracy : "--"}</b>
+              </div>
 
-          {result ? (
-            <>
-              <p>
-                <b>Accuracy:</b> {result.accuracy}
-              </p>
-              <p>
-                <b>WPM:</b> {result.wpm}
-              </p>
-            </>
-          ) : (
-            <p>No results yet</p>
-          )}
+              <div className="metric">
+                ⏱
+                <span>Time</span>
+                <b>30s</b>
+              </div>
+
+              <div className="metric">
+                ❌
+                <span>Errors</span>
+                <b>{result ? 100 - result.accuracy : "--"}</b>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
