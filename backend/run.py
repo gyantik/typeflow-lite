@@ -2,7 +2,7 @@ from flask import Flask, jsonify
 from flask_cors import CORS
 from app.routes.typing_routes import typing_bp
 
-# ⭐ NEW — import database
+# ⭐ Database import
 from app.db import db
 
 
@@ -14,9 +14,10 @@ def create_app():
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///typing.db"
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 
-    # ⭐ INIT DB
+    # ⭐ INIT DATABASE
     db.init_app(app)
 
+    # ⭐ REGISTER ROUTES
     app.register_blueprint(typing_bp, url_prefix="/api")
 
     @app.route("/")
@@ -28,14 +29,19 @@ def create_app():
         app.logger.error(f"Error occurred: {str(e)}")
         return jsonify({"error": "Internal Server Error"}), 500
 
-    # ⭐ CREATE TABLES AUTOMATICALLY
+    # ⭐ CREATE TABLES
     with app.app_context():
         db.create_all()
 
     return app
 
 
+# ⭐ CREATE APP INSTANCE
 app = create_app()
 
+
+import os
+
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
